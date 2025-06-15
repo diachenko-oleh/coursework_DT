@@ -135,12 +135,12 @@
             <details style="margin-top: 10px; margin-bottom: 10px;">
                 <summary class="actionText">Пошук за кількома жанрами</summary>
                    <?php
-                    $selectedGenres = $_POST['genre_ids'] ?? [];
-                    while ($g = pg_fetch_assoc($genres)) {
-                        $checked = in_array($g['id'], $selectedGenres) ? 'checked' : '';
-                        echo "<label><input type='checkbox' name='genre_ids[]' value='{$g['id']}' $checked> " . htmlspecialchars($g['name']) . "</label><br>";
-                    }
-                    pg_result_seek($genres, 0);
+                        $selectedGenres = $_POST['genre_ids'] ?? [];
+                        while ($g = pg_fetch_assoc($genres)) {
+                            $checked = in_array($g['id'], $selectedGenres) ? 'checked' : '';
+                            echo "<label><input type='checkbox' name='genre_ids[]' value='{$g['id']}' $checked> " . htmlspecialchars($g['name']) . "</label><br>";
+                        }
+                        pg_result_seek($genres, 0);
                     ?>
                 <br>
             </details>
@@ -222,7 +222,7 @@
 <hr>
 
 <?php
-    $where = [];
+    $condition = [];
     $params = [];
     $paramIndex = 1;
     $res = null;
@@ -240,38 +240,43 @@
 
         //ПОШУК
         if (!empty($_POST['genre_id'])) {               //жанр
-            $where[] = "genre_id = $" . $paramIndex++;
+            $condition[] = "genre_id = $" . $paramIndex++;
             $params[] = $_POST['genre_id'];
         }
-        if (!empty($_POST['publisher_id'])) {           //видавництво
-            $where[] = "publisher_id = $" . $paramIndex++;
-            $params[] = $_POST['publisher_id'];
-        }
-        if (!empty($_POST['author_id'])) {              //автор
-            $where[] = "author_id = $" . $paramIndex++;
-            $params[] = $_POST['author_id'];
-        }
+
         if (!empty($_POST['genre_ids']) && is_array($_POST['genre_ids'])) {     //декілька жанрів
             $placeholders = [];
-            foreach ($_POST['genre_ids'] as $gid) {
+            foreach ($_POST['genre_ids'] as $g_id) {
                 $placeholders[] = "$" . $paramIndex++;
-                $params[] = $gid;
+                $params[] = $g_id;
             }
-            $where[] = "genre_id IN (" . implode(",", $placeholders) . ")";
+            $condition[] = "genre_id IN (" . implode(",", $placeholders) . ")";
         }
+
+        if (!empty($_POST['publisher_id'])) {           //видавництво
+            $condition[] = "publisher_id = $" . $paramIndex++;
+            $params[] = $_POST['publisher_id'];
+        }
+
+        if (!empty($_POST['author_id'])) {              //автор
+            $condition[] = "author_id = $" . $paramIndex++;
+            $params[] = $_POST['author_id'];
+        }
+
         if (!empty($_POST['from_date']) && !empty($_POST['to_date'])) {         //проміжок дати
-            $where[] = "release_date BETWEEN $" . $paramIndex++ . " AND $" . $paramIndex++;
+            $condition[] = "release_date BETWEEN $" . $paramIndex++ . " AND $" . $paramIndex++;
             $params[] = $_POST['from_date'];
             $params[] = $_POST['to_date'];
         }
+
         if (!empty($_POST['search_term'])) {            //назва
-            $where[] = "books.name ILIKE $" . $paramIndex++;
+            $condition[] = "books.name ILIKE $" . $paramIndex++;
             $params[] = '%' . $_POST['search_term'] . '%';
         }
 
         //СОРТУВАННЯ
-        if (count($where) > 0) {
-            $sql .= " WHERE " . implode(" AND ", $where);
+        if (count($condition) > 0) {
+            $sql .= " WHERE " . implode(" AND ", $condition);
         }
         $validSortColumns = ['books.name', 'genres.name', 'books.release_date', 'authors.second_name', 'publishers.name'];
         $sortBy = 'books.id';
@@ -311,7 +316,7 @@
 
 <script>
     function resetFilters() {
-        const form = document.forms[1]; // друга форма на сторінці
+        const form = document.forms[1];
         const inputs = form.querySelectorAll("input[type='text'], input[type='date']");
         inputs.forEach(input => input.value = '');
         const selects = form.querySelectorAll("select");

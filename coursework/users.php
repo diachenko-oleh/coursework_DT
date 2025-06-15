@@ -1,6 +1,6 @@
 <?php
     session_start();
-       $error_message = '';
+    $error_message = '';
     $success_message = '';
     if (isset($_SESSION['success_message'])) {
         $success_message = $_SESSION['success_message'];
@@ -10,6 +10,7 @@
         $error_message = $_SESSION['error_message'];
         unset($_SESSION['error_message']);
     }
+
     include 'database.php';
 
     if (isset($_POST['add_user'])) {
@@ -178,16 +179,16 @@
         <table>
             <tr><th>ID</th><th>Ім’я</th><th>Прізвище</th><th>Email</th></tr>
             <?php
-            $res = pg_query($conn, "SELECT * FROM users ORDER BY id");
+                $res = pg_query($conn, "SELECT * FROM users ORDER BY id");
 
-            while ($row = pg_fetch_assoc($res)) {
-                echo "<tr>";
-                echo "<td>" . htmlspecialchars($row['id']) . "</td>";
-                echo "<td>" . htmlspecialchars($row['first_name']) . "</td>";
-                echo "<td>" . htmlspecialchars($row['second_name']) . "</td>";
-                echo "<td>" . htmlspecialchars($row['email']) . "</td>";
-                echo "</tr>";
-            }
+                while ($row = pg_fetch_assoc($res)) {
+                    echo "<tr>";
+                    echo "<td>" . htmlspecialchars($row['id']) . "</td>";
+                    echo "<td>" . htmlspecialchars($row['first_name']) . "</td>";
+                    echo "<td>" . htmlspecialchars($row['second_name']) . "</td>";
+                    echo "<td>" . htmlspecialchars($row['email']) . "</td>";
+                    echo "</tr>";
+                }
             ?>
         </table>
     </div>

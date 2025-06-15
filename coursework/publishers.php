@@ -10,6 +10,7 @@
         $error_message = $_SESSION['error_message'];
         unset($_SESSION['error_message']);
     }
+
     include 'database.php';
     
     if (isset($_POST['add_publisher'])) {
@@ -54,8 +55,6 @@
             header("Location: " . $_SERVER['REQUEST_URI']);
             exit;
         }
-
-       
     }
 ?>
 

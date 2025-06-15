@@ -10,6 +10,7 @@
         $error_message = $_SESSION['error_message'];
         unset($_SESSION['error_message']);
     }
+
     include 'database.php';
     $users = pg_query($conn, "SELECT id, first_name, second_name FROM users ORDER BY second_name, first_name");
     $books = pg_query($conn, "SELECT id, name FROM books ORDER BY name");
@@ -26,18 +27,17 @@
             ORDER BY rentals.id");
 
     if (isset($_POST['delete_rental'])) {
-        $user_id = $_POST['user_id'];
-        $book_id = $_POST['book_id'];
+        $id = $_POST['delete_id'];
 
-        $delete = pg_query_params($conn, "DELETE FROM rentals WHERE user_id = $1 AND book_id = $2", array($user_id, $book_id));
+        $delete = pg_query_params($conn, "DELETE FROM rentals WHERE id = $1", array($id));
 
         if ($delete && pg_affected_rows($delete) > 0) {
             $_SESSION['success_message'] = "Оренду видалено.";
-            header("Location: " . $_SERVER['REQUEST_URI']);
+             header("Location: " . $_SERVER['REQUEST_URI']);
             exit;
         }
         else {
-            $_SESSION['error_message'] = "Оренди з таким користувачем і книгою не знайдено.";
+            $_SESSION['error_message'] = "Оренда з таким ID не існує.";
             header("Location: " . $_SERVER['REQUEST_URI']);
             exit;
         }
@@ -126,82 +126,60 @@
     </style>
 </head>
 <body>
-<div class="titleBox">
-    <p class="titleText">Керування орендами</p>
-    <a href="main.php"><button>На головну</button></a>
-   
-</div><br><br>
+    <div class="titleBox">
+        <p class="titleText">Керування орендами</p>
+        <a href="main.php"><button>На головну</button></a>
+    
+    </div><br><br>
 
-<details style="margin-top: 10px; margin-bottom: 10px;">
-    <summary class="actionText">Видалити оренду</summary>
-    <form method="post" class="inputText">
-        <div class="inputRow">
-            <label style="width: 150px;">Користувач:</label>
-            <select name="user_id" required>
-                <option value="">Оберіть користувача</option>
-                <?php
-                    while ($u = pg_fetch_assoc($users)) {
-                        $fullName = htmlspecialchars($u['first_name'] . ' ' . $u['second_name']);
-                        echo "<option value='{$u['id']}'>$fullName</option>";
-                    }
-                    pg_result_seek($users, 0);
-                ?>
-            </select>
-        </div>
-        <div class="inputRow">
-            <label style="width: 150px;">Книга:</label>
-            <select name="book_id" required>
-                <option value="">Оберіть книгу</option>
-                <?php
-                    while ($b = pg_fetch_assoc($books)) {
-                        $bookName = htmlspecialchars($b['name']);
-                        echo "<option value='{$b['id']}'>$bookName</option>";
-                    }
-                    pg_result_seek($books, 0);
-                ?>
-            </select>
-        </div>
-        <input class="submitButton" style="width: 300px;" type="submit" name="delete_rental" value="Видалити оренду">
-    </form>
-</details>
+    <details style="margin-top: 10px; margin-bottom: 10px;">
+        <summary class="actionText">Видалити оренду</summary>
+        <form method="post" class="inputText">
+            <div class="inputRow">
+                <label style="width: 100px;">ID:</label>
+                <input type="number" min="0" name="delete_id" required>
+            </div>
+            <input class="submitButton" style="width: 300px;" type="submit" name="delete_rental" value="Видалити оренду">
+        </form>
+    </details>
 
-<hr>
+    <hr>
 
-<div>
-    <p class="actionText">Поточні оренди</p>
-    <table>
-        <tr>
-            <th>ID</th>
-            <th>Користувач</th>
-            <th>Книга</th>
-            <th>Дата</th>
-        </tr>
-        <?php
-            while ($row = pg_fetch_assoc($res)) {
-                $userFullName = htmlspecialchars($row['first_name'] . ' ' . $row['second_name']);
-                $bookName = htmlspecialchars($row['book_name']);
-                echo "<tr>";
-                echo "<td>" . htmlspecialchars($row['id']) . "</td>";
-                echo "<td>$userFullName</td>";
-                echo "<td>$bookName</td>";
-                echo "<td>" . htmlspecialchars($row['date']) . "</td>";
-                echo "</tr>";
-            }
-        ?>
-    </table>
-</div>
+    <div>
+        <p class="actionText">Поточні оренди</p>
+        <table>
+            <tr>
+                <th>ID</th>
+                <th>Користувач</th>
+                <th>Книга</th>
+                <th>Дата</th>
+            </tr>
+            <?php
+                while ($row = pg_fetch_assoc($res)) {
+                    $userFullName = htmlspecialchars($row['first_name'] . ' ' . $row['second_name']);
+                    $bookName = htmlspecialchars($row['book_name']);
+                    echo "<tr>";
+                    echo "<td>" . htmlspecialchars($row['id']) . "</td>";
+                    echo "<td>$userFullName</td>";
+                    echo "<td>$bookName</td>";
+                    echo "<td>" . htmlspecialchars($row['date']) . "</td>";
+                    echo "</tr>";
+                }
+            ?>
+        </table>
+    </div>
 
-<hr>
-<div class="inputText">
-    <p>Технічні повідомлення:</p>
-</div>
-<?php
-    if (!empty($error_message)) {
-        echo "<p class='resultText' style='color:red;'>$error_message</p>";
-    }
-    if (!empty($success_message)) {
-        echo "<p class='resultText' style='color:green;'>$success_message</p>";
-    }
-?>
+    <hr>
+    <div class="inputText">
+        <p>Технічні повідомлення:</p>
+    </div>
+    <?php
+        if (!empty($error_message)) {
+            echo "<p class='resultText' style='color:red;'>$error_message</p>";
+        }
+        if (!empty($success_message)) {
+            echo "<p class='resultText' style='color:green;'>$success_message</p>";
+        }
+    ?>
 </body>
 </html>

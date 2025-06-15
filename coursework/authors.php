@@ -1,6 +1,6 @@
 <?php
     session_start();
-      $error_message = '';
+    $error_message = '';
     $success_message = '';
     if (isset($_SESSION['success_message'])) {
         $success_message = $_SESSION['success_message'];
@@ -10,6 +10,7 @@
         $error_message = $_SESSION['error_message'];
         unset($_SESSION['error_message']);
     }
+
     include 'database.php';
 
     if (isset($_POST['add_author'])) {
@@ -146,7 +147,6 @@
                 <div class="inputRow">
                     <label style="width: 100px;">Прізвище:</label>
                     <input type="text" name="second_name" required>
-
                 </div>
                 <input class="submitButton" style="width: 300px;" type="submit" name="add_author" value="Додати автора">
             </form>

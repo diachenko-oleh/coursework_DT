@@ -31,30 +31,41 @@
         $book_id = trim($_POST['book_id']);
         $date = trim($_POST['date']);
 
-    if ($user_id && $book_id && $date) {
-        $insert = pg_query_params($conn, "INSERT INTO rentals (user_id, book_id, date) VALUES ($1, $2, $3)", array($user_id, $book_id, $date));
+        if ($user_id && $book_id && $date) {
+            $insert = pg_query_params($conn, "INSERT INTO rentals (user_id, book_id, date) VALUES ($1, $2, $3)", array($user_id, $book_id, $date));
 
-        if ($insert) {
-            $_SESSION['success_message'] = "Оренду додано.";
-            header("Location: " . $_SERVER['REQUEST_URI']);
-            exit;
+            if ($insert) {
+                $_SESSION['success_message'] = "Оренду додано.";
+
+                $_SESSION['old_user_id'] = $user_id;
+                $_SESSION['old_book_id'] = $book_id;
+                $_SESSION['old_date'] = $date;
+
+                header("Location: " . $_SERVER['REQUEST_URI']);
+                exit;
+            }
+            else {
+                $_SESSION['error_message'] = "Помилка при додаванні оренди.";
+                header("Location: " . $_SERVER['REQUEST_URI']);
+                exit;
+            }
         }
         else {
-            $_SESSION['error_message'] = "Помилка при додаванні оренди.";
+            $_SESSION['error_message'] = "Будь ласка, заповніть всі поля.";
             header("Location: " . $_SERVER['REQUEST_URI']);
             exit;
         }
-    }
-    else {
-        $_SESSION['error_message'] = "Будь ласка, заповніть всі поля.";
-        header("Location: " . $_SERVER['REQUEST_URI']);
-        exit;
-    }
     }
 
     function isSelected($value, $selected) {
         return $value == $selected ? 'selected' : '';
     }
+
+    $selectedUser = $_SESSION['old_user_id'] ?? '';
+    $selectedBook = $_SESSION['old_book_id'] ?? '';
+    $selectedDate = $_SESSION['old_date'] ?? '';
+
+    unset($_SESSION['old_user_id'], $_SESSION['old_book_id'], $_SESSION['old_date']);
 ?>
 
 <!DOCTYPE html>
@@ -155,7 +166,6 @@
             <select name="user_id" required>
                 <option value="">Оберіть користувача</option>
                 <?php
-                    $selectedUser = $_POST['user_id'] ?? '';
                     while ($u = pg_fetch_assoc($users)) {
                         $fullName = htmlspecialchars($u['first_name'] . ' ' . $u['second_name']);
                         echo "<option value='{$u['id']}' " . isSelected($u['id'], $selectedUser) . ">$fullName</option>";
@@ -170,7 +180,6 @@
             <select name="book_id" required>
                 <option value="">Оберіть книгу</option>
                 <?php
-                    $selectedBook = $_POST['book_id'] ?? '';
                     while ($b = pg_fetch_assoc($books)) {
                         $bookName = htmlspecialchars($b['name']);
                         echo "<option value='{$b['id']}' " . isSelected($b['id'], $selectedBook) . ">$bookName</option>";
@@ -182,12 +191,13 @@
     
         <div class="inputRow">
             <label style="width: 150px;">Дата оренди:</label>
-            <input type="date" name="date" required value="<?php echo htmlspecialchars($_POST['date'] ?? ''); ?>">
+            <input type="date" name="date" required value="<?php echo htmlspecialchars($selectedDate); ?>">
         </div>
         <input class="submitButton" style="width: 300px;" type="submit" name="add_rental" value="Додати оренду">
     </form>
 <hr>
 </div>
+
 <div>
     <p class="actionText">Поточні оренди</p>
     <table>
