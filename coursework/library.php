@@ -167,9 +167,9 @@
                 <select name="publisher_id">
                     <option value="">Оберіть видавництво</option>
                     <?php
-                        $selectedPublisher = $_POST['publisher_id'] ?? '';
+                        $PublisherOnly = $_POST['publisher_id'] ?? '';
                         while ($p = pg_fetch_assoc($publishers)) {
-                            echo "<option value='{$p['id']}' " . isSelected($p['id'], $selectedPublisher) . ">" . htmlspecialchars($p['name']) . "</option>";
+                            echo "<option value='{$p['id']}' " . isSelected($p['id'], $PublisherOnly) . ">" . htmlspecialchars($p['name']) . "</option>";
                         }
                         pg_result_seek($publishers, 0);
                     ?>
@@ -188,7 +188,7 @@
             
             <span class="actionText">Пошук по назві</span><br>
             <div class="inputRow">
-                <input type="text" name="search_term" placeholder="Назва книги" value="<?= htmlspecialchars($_POST['search_term'] ?? '') ?>"><br><br>
+                <input type="text" name="search_name" placeholder="Назва книги" value="<?= htmlspecialchars($_POST['search_name'] ?? '') ?>"><br><br>
                 <br><br>
             </div>
             
@@ -233,6 +233,7 @@
             JOIN authors ON books.author_id = authors.id";
 
     if (isset($_POST['show_all'])) {
+        $sql .= " ORDER BY books.id";
         $res = pg_query($conn, $sql);
         echo "<h4>Усі книги:</h4>";
     } 
@@ -253,14 +254,14 @@
             $condition[] = "genre_id IN (" . implode(",", $placeholders) . ")";
         }
 
-        if (!empty($_POST['publisher_id'])) {           //видавництво
-            $condition[] = "publisher_id = $" . $paramIndex++;
-            $params[] = $_POST['publisher_id'];
-        }
-
         if (!empty($_POST['author_id'])) {              //автор
             $condition[] = "author_id = $" . $paramIndex++;
             $params[] = $_POST['author_id'];
+        }
+
+        if (!empty($_POST['publisher_id'])) {           //видавництво
+            $condition[] = "publisher_id = $" . $paramIndex++;
+            $params[] = $_POST['publisher_id'];
         }
 
         if (!empty($_POST['from_date']) && !empty($_POST['to_date'])) {         //проміжок дати
@@ -269,48 +270,49 @@
             $params[] = $_POST['to_date'];
         }
 
-        if (!empty($_POST['search_term'])) {            //назва
+        if (!empty($_POST['search_name'])) {            //назва
             $condition[] = "books.name ILIKE $" . $paramIndex++;
-            $params[] = '%' . $_POST['search_term'] . '%';
+            $params[] = '%' . $_POST['search_name'] . '%';
         }
 
         //СОРТУВАННЯ
-        if (count($condition) > 0) {
+        {
+            if (count($condition) > 0) {
             $sql .= " WHERE " . implode(" AND ", $condition);
-        }
-        $validSortColumns = ['books.name', 'genres.name', 'books.release_date', 'authors.second_name', 'publishers.name'];
-        $sortBy = 'books.id';
-        if (!empty($_POST['sort_by']) && in_array($_POST['sort_by'], $validSortColumns)) {
-            $sortBy = $_POST['sort_by'];
-        }
-        $sortDir = (strtolower($_POST['sort_dir'] ?? '') === 'desc') ? 'DESC' : 'ASC';
-        $sql .= " ORDER BY $sortBy $sortDir";
+            }
+            $validSortColumns = ['books.name', 'genres.name', 'books.release_date', 'authors.second_name', 'publishers.name'];
+            $sortBy = 'books.id';
+            if (!empty($_POST['sort_by']) && in_array($_POST['sort_by'], $validSortColumns)) {
+                $sortBy = $_POST['sort_by'];
+            }
+            $sortDir = (strtolower($_POST['sort_dir'] ?? '') === 'desc') ? 'DESC' : 'ASC';
+            $sql .= " ORDER BY $sortBy $sortDir";
 
-        $res = pg_query_params($conn, $sql, $params);
-        echo '<div class="inputText" style="align-items:start;">';
-        echo '<p>Результати пошуку:</p>';
-        echo '</div>';
+            $res = pg_query_params($conn, $sql, $params);
+            echo '<div class="inputText" style="align-items:start;">';
+            echo '<p>Результати пошуку:</p>';
+            echo '</div>';
+        }
     }
 
-
-        if ($res && pg_num_rows($res) > 0) {
-            echo "<table border='1' cellpadding='5'>";
-            echo "<tr><th>ID</th><th>Назва</th><th>Жанр</th><th>Видавництво</th><th>Дата</th><th>Автор</th></tr>";
-            while ($row = pg_fetch_assoc($res)) {
-                echo "<tr>";
-                echo "<td>" . htmlspecialchars($row['id']) . "</td>";
-                echo "<td>" . htmlspecialchars($row['name']) . "</td>";
-                echo "<td>" . htmlspecialchars($row['genre_name']) . "</td>";
-                echo "<td>" . htmlspecialchars($row['publisher_name']) . "</td>";
-                echo "<td>" . htmlspecialchars($row['release_date']) . "</td>";
-                echo "<td>" . htmlspecialchars($row['author_name']) . "</td>";
-                echo "</tr>";
-            }
-            echo "</table>";
+    if ($res && pg_num_rows($res) > 0) {
+        echo "<table border='1' cellpadding='5'>";
+        echo "<tr><th>ID</th><th>Назва</th><th>Жанр</th><th>Видавництво</th><th>Дата</th><th>Автор</th></tr>";
+        while ($row = pg_fetch_assoc($res)) {
+            echo "<tr>";
+            echo "<td>" . htmlspecialchars($row['id']) . "</td>";
+            echo "<td>" . htmlspecialchars($row['name']) . "</td>";
+            echo "<td>" . htmlspecialchars($row['genre_name']) . "</td>";
+            echo "<td>" . htmlspecialchars($row['publisher_name']) . "</td>";
+            echo "<td>" . htmlspecialchars($row['release_date']) . "</td>";
+            echo "<td>" . htmlspecialchars($row['author_name']) . "</td>";
+            echo "</tr>";
         }
-        elseif ($res){
-            echo "<p>Нічого не знайдено.</p>";
-        } 
+        echo "</table>";
+    }
+    elseif ($res){
+        echo "<p>Нічого не знайдено.</p>";
+    } 
 ?>
 
 

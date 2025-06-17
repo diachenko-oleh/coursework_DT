@@ -1,6 +1,6 @@
 <?php
     session_start();
-     $error_message = '';
+    $error_message = '';
     $success_message = '';
     if (isset($_SESSION['success_message'])) {
         $success_message = $_SESSION['success_message'];
@@ -10,6 +10,7 @@
         $error_message = $_SESSION['error_message'];
         unset($_SESSION['error_message']);
     }
+
     include 'database.php';
     $genres = pg_query($conn, "SELECT id, name FROM genres ORDER BY name");
     $publishers = pg_query($conn, "SELECT id, name FROM publishers ORDER BY name");
@@ -39,7 +40,6 @@
 
     if (isset($_POST['delete_book'])) {
     $id = $_POST['delete_id'];
-
     $delete = pg_query_params($conn, "DELETE FROM books WHERE id = $1", array($id));
 
     if ($delete && pg_affected_rows($delete) > 0) {
@@ -215,12 +215,12 @@
             <?php
                 $query = 
                     "SELECT
-                        b.id,
-                        b.name,
-                        g.name AS genre,
-                        a.first_name || ' ' || a.second_name AS author,
-                        p.name AS publisher,
-                        b.release_date
+                    b.id,
+                    b.name,
+                    g.name AS genre,
+                    a.first_name || ' ' || a.second_name AS author,
+                    p.name AS publisher,
+                    b.release_date
                     FROM books b
                     LEFT JOIN genres g ON b.genre_id = g.id
                     LEFT JOIN authors a ON b.author_id = a.id
